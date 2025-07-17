@@ -18,7 +18,7 @@ export default function CrForm1() {
   const initialFormState: FormData = Object.fromEntries(crFormConfig.map(f => [f.key, '']));
   const [formData, setFormData] = useState<FormData>(initialFormState);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  const [activeIndex, setActiveIndex] = useState<number[]>([0]);
+  const [activeIndex, setActiveIndex] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
 
@@ -72,7 +72,7 @@ export default function CrForm1() {
     }
 
     setCompletedSteps(prev => [...prev, stepIndex]);
-    setActiveIndex([stepIndex + 1]);
+    setActiveIndex(stepIndex + 1);
     toast.current?.show({
       severity: 'success',
       summary: 'Step Completed',
@@ -145,7 +145,7 @@ export default function CrForm1() {
   return (
     <>
       <Toast ref={toast} />
-      <Accordion multiple={false} activeIndex={activeIndex} onTabChange={e => setActiveIndex([e.index as number])}>
+      <Accordion multiple={false} activeIndex={activeIndex} onTabChange={e => setActiveIndex(e.index as number)}>
         {steps.map((step, i) => {
           const disabled = i > 0 && !completedSteps.includes(i - 1);
           const tabHasError = step.fields.some(f => errors[f.key]);
