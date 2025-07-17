@@ -1,3 +1,5 @@
+//npm install primeflex
+//_app.tsx: import 'primeflex/primeflex.css';
 import { useRef, useState } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';

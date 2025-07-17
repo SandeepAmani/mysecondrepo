@@ -14,16 +14,13 @@ type ValidationErrors = Record<string, string>;
 
 export default function CrForm1() {
   const toast = useRef<Toast>(null);
-
-  const initialFormState: FormData = Object.fromEntries(
-    crFormConfig.map(field => [field.key, ''])
-  );
+  const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const initialFormState: FormData = Object.fromEntries(crFormConfig.map(f => [f.key, '']));
   const [formData, setFormData] = useState<FormData>(initialFormState);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [activeIndex, setActiveIndex] = useState<number[]>([0]);
   const [loading, setLoading] = useState(false);
 
-  // 🪜 Divide form into steps (adjust slicing as needed)
   const steps = [
     { label: 'Basic Info', fields: crFormConfig.slice(0, 2) },
     { label: 'Details', fields: crFormConfig.slice(2, 4) },
@@ -55,6 +52,13 @@ export default function CrForm1() {
     });
 
     setErrors(prev => ({ ...prev, ...newErrors }));
+
+    // 🔍 Auto-scroll to the first invalid field
+    if (Object.keys(newErrors).length > 0) {
+      const firstInvalidKey = Object.keys(newErrors)[0];
+      fieldRefs.current[firstInvalidKey]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -75,14 +79,21 @@ export default function CrForm1() {
       const submissionObject = crFormConfig.reduce((acc, field) => {
         let val = formData[field.key];
         if (field.type === 'calendar' && val instanceof Date) {
-          val = val.toISOString(); // or format as needed
+          val = val.toISOString();
         }
         acc[field.key] = val;
         return acc;
       }, {} as Record<string, any>);
 
-      console.log('Submitting:', submissionObject);
-      // await fetch('/api/submit', { method: 'POST', body: JSON.stringify(submissionObject) });
+      console.log('Submitting to /api/submit-cr:', submissionObject);
+
+      const res = await fetch('/api/submit-cr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionObject)
+      });
+
+      if (!res.ok) throw new Error('Submission failed');
 
       toast.current?.show({
         severity: 'success',
@@ -143,6 +154,7 @@ export default function CrForm1() {
             hourFormat="24"
             showTime
             showSeconds
+            hideOnDateTimeSelect
             className={`w-full ${error ? 'p-invalid' : ''}`}
             dateFormat="dd-mm-yy"
           />
@@ -164,7 +176,11 @@ export default function CrForm1() {
             >
               <div className="grid formgrid p-fluid">
                 {step.fields.map(field => (
-                  <div key={field.key} className="field col-12 md:col-4">
+                  <div
+                    key={field.key}
+                    ref={el => (fieldRefs.current[field.key] = el)}
+                    className="field col-12 md:col-4"
+                  >
                     <label className="block font-medium mb-1">
                       {field.label} {field.required && '*'}
                     </label>
@@ -176,16 +192,10 @@ export default function CrForm1() {
                 ))}
               </div>
 
-              {/* Show submit button on last tab */}
               {index === steps.length - 1 && (
                 <div className="flex justify-end mt-4 gap-2">
                   <Button label="Submit" onClick={handleSubmit} disabled={loading} />
-                  {loading && (
-                    <ProgressSpinner
-                      style={{ width: '25px', height: '25px' }}
-                      strokeWidth="6"
-                    />
-                  )}
+                  {loading && <ProgressSpinner style={{ width: '25px', height: '25px' }} strokeWidth="6" />}
                 </div>
               )}
             </AccordionTab>
