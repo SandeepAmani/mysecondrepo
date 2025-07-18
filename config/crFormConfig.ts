@@ -11,6 +11,7 @@ export interface CRFormField {
   options?: { label: string; value: string }[]; // for dropdown
   maxLength?: number; // for textarea
   pattern?: RegExp;   // for textbox validation
+  colSpan?: number; // for grid layout
 }
 
 export const crFormConfig: CRFormField[] = [
@@ -20,14 +21,16 @@ export const crFormConfig: CRFormField[] = [
     type: 'textbox',
     required: true,
     pattern: /^[A-Za-z\s-]+$/,
-    placeholder: 'Alphabets, space, hyphen only'
+    placeholder: 'Alphabets, space, hyphen only',
+    colSpan: 6
   },
   {
     key: 'field2',
     label: 'Field 2',
     type: 'textbox',
     required: true,
-    pattern: /^[A-Za-z\s-]+$/
+    pattern: /^[A-Za-z\s-]+$/,
+    colSpan: 6
   },
   {
     key: 'dropdown1',
@@ -38,20 +41,23 @@ export const crFormConfig: CRFormField[] = [
       { label: 'Select', value: '' },
       { label: 'Option 1', value: 'opt1' },
       { label: 'Option 2', value: 'opt2' }
-    ]
+    ],
+    colSpan: 6
   },
   {
     key: 'textarea1',
     label: 'Comments',
     type: 'textarea',
     required: true,
-    maxLength: 4000
+    maxLength: 4000,
+    colSpan: 12
   },
   {
     key: 'scheduleDate',
     label: 'Schedule Date/Time',
     type: 'calendar',
-    required: true
+    required: true,
+    colSpan: 6
   }
 ];
 
