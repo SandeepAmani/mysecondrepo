@@ -1,5 +1,5 @@
 // config/crFormConfig2.ts
-import { CRFormField } from '@/components/CrForm1';
+import { CRFormField } from "../types/crFormField";
 
 export const crFormConfig2: CRFormField[] = [
   {

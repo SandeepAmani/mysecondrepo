@@ -11,25 +11,31 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { crFormConfig1 } from '../config/crFormConfig1';
 import { crFormConfig2 } from '../config/crFormConfig2';
 import { crFormConfig3 } from '../config/crFormConfig3';
-
-export interface CRFormField {
-  key: string;
-  label: string;
-  type: 'textbox' | 'dropdown' | 'textarea' | 'calendar';
-  required?: boolean;
-  maxLength?: number;
-  pattern?: RegExp;
-  options?: string[];
-  colSpan?: number;
-}
+import { CRFormField } from "../types/crFormField";
+// export interface CRFormField {
+//   key: string;
+//   label: string;
+//   type: 'textbox' | 'dropdown' | 'textarea' | 'calendar';
+//   required?: boolean;
+//   maxLength?: number;
+//   pattern?: RegExp;
+//   options?: string[];
+//   colSpan?: number;
+// }
 
 export default function CrForm1() {
   const toast = useRef<Toast>(null);
   const fieldRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const allFields = [...crFormConfig1, ...crFormConfig2, ...crFormConfig3];
 
-  const initialFormState = Object.fromEntries(allFields.map(f => [f.key, '']));
-  const [formData, setFormData] = useState<Record<string, any>>(initialFormState);
+  type FormFieldKey = typeof allFields[number]['key'];
+type FormData = Record<FormFieldKey, string | Date | null>;
+
+  // const initialFormState = Object.fromEntries(allFields.map(f => [f.key, '']));
+  // const [formData, setFormData] = useState<Record<string, unknown>>(initialFormState);
+  const [formData, setFormData] = useState<FormData>(
+  Object.fromEntries(allFields.map(f => [f.key, ''])) as FormData
+);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeIndex, setActiveIndex] = useState<number>(0);
   const [loading, setLoading] = useState(false);
@@ -41,16 +47,21 @@ export default function CrForm1() {
     { label: 'Schedule', fields: crFormConfig3 }
   ];
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = <T extends string | Date | null>(key: string, value: T) => {
     setFormData(prev => ({ ...prev, [key]: value }));
     setErrors(prev => ({ ...prev, [key]: '' }));
   };
+
+//   const handleChange = (key: string, value: string | Date | null | undefined) => {
+//   setFormData(prev => ({ ...prev, [key]: value }));
+//   setErrors(prev => ({ ...prev, [key]: '' }));
+// };
 
   const validateFields = (fields: CRFormField[]): boolean => {
     const newErrors: Record<string, string> = {};
 
     fields.forEach(field => {
-      const val = formData[field.key];
+      const val = formData[field.key] as string;
       if (field.required && (!val || val === '')) {
         newErrors[field.key] = 'Required';
       }
@@ -104,7 +115,7 @@ export default function CrForm1() {
         }
         acc[field.key] = val;
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, string | Date | null>);
 
       const res = await fetch('/api/submit-cr', {
         method: 'POST',
@@ -132,13 +143,13 @@ export default function CrForm1() {
 
     switch (field.type) {
       case 'textbox':
-        return <InputText value={value} onChange={e => handleChange(field.key, e.target.value)} className={`w-full ${error ? 'p-invalid' : ''}`} />;
+        return <InputText value={typeof value === 'string' ? value : value?.toString() ?? ''} onChange={e => handleChange(field.key, e.target.value)} className={`w-full ${error ? 'p-invalid' : ''}`} />;
       case 'dropdown':
         return <Dropdown value={value} options={field.options} onChange={e => handleChange(field.key, e.value)} placeholder="Select" className={`w-full ${error ? 'p-invalid' : ''}`} />;
       case 'textarea':
-        return <InputTextarea value={value} onChange={e => handleChange(field.key, e.target.value)} rows={5} maxLength={field.maxLength} className={`w-full ${error ? 'p-invalid' : ''}`} />;
+        return <InputTextarea value={typeof value === 'string' ? value : value?.toString() ?? ''} onChange={e => handleChange(field.key, e.target.value)} rows={5} maxLength={field.maxLength} className={`w-full ${error ? 'p-invalid' : ''}`} />;
       case 'calendar':
-        return <Calendar value={value ?? null} onChange={e => handleChange(field.key, e.value)} showIcon showTime showSeconds hideOnDateTimeSelect hourFormat="24" minDate={new Date()} className={`w-full ${error ? 'p-invalid' : ''}`} dateFormat="dd-mm-yy" />;
+        return <Calendar value={value ?new Date(value) :null} onChange={e => handleChange(field.key, e.value?? null)} showIcon showTime showSeconds hideOnDateTimeSelect hourFormat="24" minDate={new Date()} className={`w-full ${error ? 'p-invalid' : ''}`} dateFormat="dd-mm-yy" />;
     }
   };
 
@@ -154,7 +165,7 @@ export default function CrForm1() {
                 return (
                   <div
                     key={field.key}
-                    ref={el => (fieldRefs.current[field.key] = el)}
+                    ref={el => {(fieldRefs.current[field.key] = el)}}
                     className={`field col-12 md:col-${colSpan}`}
                   >
                     <label className="block font-medium mb-1">
